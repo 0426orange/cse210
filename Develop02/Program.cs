@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-class Entry
+class JournalEntry
 {
     public string Prompt { get; set; }
     public string Response { get; set; }
     public string Date { get; set; }
 
-    public Entry(string prompt, string response, string date)
+    public JournalEntry(string prompt, string response, string date)
     {
         Prompt = prompt;
         Response = response;
@@ -18,11 +18,11 @@ class Entry
 
 class Journal
 {
-    private List<Entry> entries = new List<Entry>();
+    private List<JournalEntry> entries = new List<JournalEntry>();
 
     public void AddEntry(string prompt, string response, string date)
     {
-        Entry entry = new Entry(prompt, response, date);
+        JournalEntry entry = new JournalEntry(prompt, response, date);
         entries.Add(entry);
     }
 
@@ -36,7 +36,20 @@ class Journal
         }
     }
 
-    public void SaveJournalToFile(string fileName)
+    public List<JournalEntry> GetEntries()
+    {
+        return entries;
+    }
+
+    public void SetEntries(List<JournalEntry> newEntries)
+    {
+        entries = newEntries;
+    }
+}
+
+class FileManager
+{
+    public void SaveJournalToFile(string fileName, List<JournalEntry> entries)
     {
         using (StreamWriter writer = new StreamWriter(fileName))
         {
@@ -47,9 +60,9 @@ class Journal
         }
     }
 
-    public void LoadJournalFromFile(string fileName)
+    public List<JournalEntry> LoadJournalFromFile(string fileName)
     {
-        entries.Clear();
+        List<JournalEntry> loadedEntries = new List<JournalEntry>();
         try
         {
             using (StreamReader reader = new StreamReader(fileName))
@@ -63,7 +76,7 @@ class Journal
                         string date = parts[0];
                         string prompt = parts[1];
                         string response = parts[2];
-                        AddEntry(prompt, response, date);
+                        loadedEntries.Add(new JournalEntry(prompt, response, date));
                     }
                 }
             }
@@ -72,6 +85,7 @@ class Journal
         {
             Console.WriteLine("File not found. Creating a new journal.");
         }
+        return loadedEntries;
     }
 }
 
@@ -80,6 +94,7 @@ class Program
     static void Main()
     {
         Journal journal = new Journal();
+        FileManager fileManager = new FileManager();
         string fileName = "journal.txt";
 
         while (true)
@@ -109,14 +124,14 @@ class Program
                         break;
 
                     case 3:
-                        journal.SaveJournalToFile(fileName);
+                        fileManager.SaveJournalToFile(fileName, journal.GetEntries());
                         Console.WriteLine("Journal saved to file.");
                         break;
 
                     case 4:
                         Console.WriteLine("Enter the name of the file to load:");
                         string loadFileName = Console.ReadLine();
-                        journal.LoadJournalFromFile(loadFileName);
+                        journal.SetEntries(fileManager.LoadJournalFromFile(loadFileName));
                         Console.WriteLine("Journal loaded from file.");
                         break;
 
